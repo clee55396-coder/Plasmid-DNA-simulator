@@ -229,3 +229,62 @@ if st.session_state.get("show_analysis", False):
                     make_gel_html(mutant_fragments),
                     unsafe_allow_html=True
                 )
+
+        st.divider()
+        st.subheader("5. 단일 염기 치환 자동 분석")
+
+        st.write(
+            "DNA의 모든 위치에서 가능한 단일 염기 치환을 "
+            "분석하여 절단 패턴이 변하는 경우를 계산합니다."
+        )
+
+        if st.button("🧬 전체 변이 분석하기"):
+
+            original_dna = "".join(dna.upper().split())
+            enzyme = enzymes[selected]
+
+            original_pattern = get_pattern(
+                original_dna, enzyme
+            )
+
+            detected = 0
+            total = 0
+
+            with st.spinner("변이를 분석하는 중입니다..."):
+
+                for i in range(len(original_dna)):
+                    for base in "ACGT":
+
+                        if base == original_dna[i]:
+                            continue
+
+                        mutant = (
+                            original_dna[:i]
+                            + base
+                            + original_dna[i+1:]
+                        )
+
+                        mutant_pattern = get_pattern(
+                            mutant, enzyme
+                        )
+
+                        total += 1
+
+                        if mutant_pattern != original_pattern:
+                            detected += 1
+
+            undetected = total - detected
+            rate = detected / total * 100
+
+            st.success("전체 변이 분석 완료!")
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("전체 변이", f"{total:,}개")
+            col2.metric("구별 가능", f"{detected:,}개")
+            col3.metric("구별 불가능", f"{undetected:,}개")
+
+            st.metric(
+                "이론적 변이 구별 가능 비율",
+                f"{rate:.2f}%"
+            )
