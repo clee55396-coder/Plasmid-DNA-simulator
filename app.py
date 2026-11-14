@@ -288,3 +288,48 @@ if st.session_state.get("show_analysis", False):
                 "이론적 변이 구별 가능 비율",
                 f"{rate:.2f}%"
             )
+
+            # 변이 검출 가능 비율 시각화
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            st.subheader("6. 변이 구별 가능성 시각화")
+
+            import pandas as pd
+
+            chart_data = pd.DataFrame({
+                "구분": ["구별 가능", "구별 불가능"],
+                "변이 수": [detected, undetected]
+            })
+
+            st.bar_chart(
+                chart_data,
+                x="구분",
+                y="변이 수",
+                color="#46B5C7"
+            )
+
+            st.write("**전체 변이 중 구별 가능한 비율**")
+
+            st.progress(
+                rate / 100,
+                text=f"{rate:.2f}%"
+            )
+
+            st.caption(
+                "제한효소 절단 조각의 크기 변화를 기준으로 "
+                "계산한 이론적 구별 가능 비율입니다."
+            )
+            st.metric(
+                "이론적 변이 구별 가능 비율",
+                f"{rate:.2f}%"
+            )
