@@ -311,7 +311,7 @@ if st.session_state.get("show_analysis", False):
                 "변이 수": [detected, undetected]
             })
 
-                        st.bar_chart(
+            st.bar_chart(
                 chart_data,
                 x="구분",
                 y="변이 수",
