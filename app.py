@@ -80,3 +80,48 @@ if st.button("🔬 DNA 분석하기", type="primary"):
             "**절단 지점 수:**",
             result["cut_count"]
         )
+        # 3. 전기영동 밴드 시뮬레이션
+        st.subheader("3. 전기영동 밴드 예측")
+
+        if result["fragments"]:
+
+            import math
+
+            bands = ""
+
+            for size in sorted(set(result["fragments"]), reverse=True):
+
+                # DNA 크기를 이용한 이동 위치 계산
+                position = 25 + 140 * (4 - math.log10(size))
+                position = max(20, min(320, position))
+
+                bands += (
+                    f'<div style="position:absolute;top:{position:.0f}px;'
+                    'left:45px;width:170px;height:6px;'
+                    'background:#8efbff;'
+                    'box-shadow:0 0 10px #8efbff;"></div>'
+                    f'<span style="position:absolute;top:{position-7:.0f}px;'
+                    'left:225px;color:white;font-size:13px;">'
+                    f'{size} bp</span>'
+                )
+
+            gel = (
+                '<div style="height:360px;width:330px;'
+                'position:relative;background:#07132b;'
+                'border:1px solid #445;border-radius:8px;">'
+                + bands + '</div>'
+            )
+
+            st.markdown(gel, unsafe_allow_html=True)
+
+            st.caption(
+                "DNA 크기를 바탕으로 밴드 위치를 단순 예측한 "
+                "시뮬레이션입니다. 실제 실험 결과와는 차이가 있습니다."
+            )
+
+        else:
+            st.info(
+                "절단 지점이 없어 선형 DNA 조각의 "
+                "밴드 위치를 예측하지 않습니다."
+            )
+
