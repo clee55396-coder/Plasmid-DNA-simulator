@@ -436,3 +436,127 @@ if st.session_state.get("show_analysis", False):
                 "가상 DNA를 대상으로 한 계산 결과입니다. "
                 "실제 전기영동의 검출 한계는 반영하지 않았습니다."
             )
+
+        st.divider()
+        st.subheader("8. 제한효소 3종의 분석 결과 종합")
+
+        st.write(
+            "각 제한효소로 별도로 분석했을 때 "
+            "구별 가능한 변이들을 합쳐 "
+            "전체 변이 구별 가능성을 계산합니다."
+        )
+
+        if st.button("🧬 세 효소 종합 분석하기"):
+
+            import pandas as pd
+
+            # 39단계와 동일한 가상 플라스미드
+            joint_dna = list("A" * 3000)
+
+            joint_sites = {
+                "EcoRI": ("GAATTC", [100, 900, 2100]),
+                "BamHI": ("GGATCC", [300, 1300, 2300]),
+                "HindIII": ("AAGCTT", [500, 1500, 2500])
+            }
+
+            for name, (sequence, positions) in joint_sites.items():
+                for pos in positions:
+                    joint_dna[pos:pos+6] = list(sequence)
+
+            joint_dna = "".join(joint_dna)
+
+            # 원본 DNA 절단 패턴
+            reference_patterns = {}
+
+            for name, (enzyme, positions) in joint_sites.items():
+                reference_patterns[name] = get_pattern(
+                    joint_dna, enzyme
+                )
+
+            # 각 효소가 구별한 변이 저장
+            detected_by = {
+                name: set() for name in joint_sites
+            }
+
+            with st.spinner("세 효소의 분석 결과를 종합하는 중입니다..."):
+
+                for i in range(len(joint_dna)):
+                    for base in "ACGT":
+
+                        if base == joint_dna[i]:
+                            continue
+
+                        mutant = (
+                            joint_dna[:i]
+                            + base
+                            + joint_dna[i+1:]
+                        )
+
+                        for name, (enzyme, positions) in joint_sites.items():
+
+                            mutant_pattern = get_pattern(
+                                mutant, enzyme
+                            )
+
+                            if mutant_pattern != reference_patterns[name]:
+                                detected_by[name].add((i+1, base))
+
+            # 각 효소의 구별 가능 변이 합집합
+            combined = set()
+
+            for mutations in detected_by.values():
+                combined.update(mutations)
+
+            total = len(joint_dna) * 3
+            combined_count = len(combined)
+            combined_rate = combined_count / total * 100
+
+            st.success("종합 분석 완료!")
+
+            rows = []
+
+            for name, mutations in detected_by.items():
+                rows.append({
+                    "분석 방식": name,
+                    "구별 가능 변이 수": len(mutations)
+                })
+
+            rows.append({
+                "분석 방식": "3종 결과 종합",
+                "구별 가능 변이 수": combined_count
+            })
+
+            result_df = pd.DataFrame(rows)
+
+            st.dataframe(
+                result_df,
+                hide_index=True,
+                use_container_width=True
+            )
+
+            st.subheader("종합 분석 결과")
+
+            col1, col2 = st.columns(2)
+
+            col1.metric(
+                "구별 가능한 변이",
+                f"{combined_count:,}개"
+            )
+
+            col2.metric(
+                "이론적 구별 가능 비율",
+                f"{combined_rate:.2f}%"
+            )
+
+            st.bar_chart(
+                result_df,
+                x="분석 방식",
+                y="구별 가능 변이 수",
+                horizontal=True
+            )
+
+            st.caption(
+                "세 제한효소를 각각 따로 사용한 분석 결과를 "
+                "종합한 것입니다. 실제 전기영동의 분리능이나 "
+                "동시 절단 실험을 재현한 결과는 아닙니다."
+            )
