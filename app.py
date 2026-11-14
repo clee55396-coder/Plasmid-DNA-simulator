@@ -80,6 +80,7 @@ if st.button("🔬 DNA 분석하기", type="primary"):
             "**절단 지점 수:**",
             result["cut_count"]
         )
+        
         # 3. 전기영동 밴드 시뮬레이션
         st.subheader("3. 전기영동 밴드 예측")
 
