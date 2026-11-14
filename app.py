@@ -74,12 +74,17 @@ selected = st.selectbox(
 
 st.divider()
 
+
 if st.button("🔬 DNA 분석하기", type="primary"):
+    st.session_state["show_analysis"] = True
+
+if st.session_state.get("show_analysis", False):
 
     result = analyze_plasmid(
         dna,
         enzymes[selected]
     )
+
 
     if "error" in result:
         st.error(result["error"])
