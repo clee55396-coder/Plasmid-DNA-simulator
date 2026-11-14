@@ -311,11 +311,12 @@ if st.session_state.get("show_analysis", False):
                 "변이 수": [detected, undetected]
             })
 
-            st.bar_chart(
+                        st.bar_chart(
                 chart_data,
                 x="구분",
                 y="변이 수",
-                color="#46B5C7"
+                color="#46B5C7",
+                horizontal=True
             )
 
             st.write("**전체 변이 중 구별 가능한 비율**")
