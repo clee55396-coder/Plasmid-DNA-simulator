@@ -334,3 +334,105 @@ if st.session_state.get("show_analysis", False):
                 "이론적 변이 구별 가능 비율",
                 f"{rate:.2f}%"
             )
+
+
+
+
+
+
+
+        st.divider()
+        st.subheader("7. 제한효소별 변이 구별 능력 비교")
+
+        st.write(
+            "EcoRI, BamHI, HindIII의 인식 부위가 각각 "
+            "3개씩 포함된 3000bp 가상 플라스미드를 이용하여 "
+            "단일 염기 치환에 대한 구별 가능성을 비교합니다."
+        )
+
+        if st.button("🔬 제한효소 3종 비교하기"):
+
+            import pandas as pd
+
+            # 비교용 가상 플라스미드 생성
+            comparison_dna = list("A" * 3000)
+
+            comparison_sites = {
+                "EcoRI": ("GAATTC", [100, 900, 2100]),
+                "BamHI": ("GGATCC", [300, 1300, 2300]),
+                "HindIII": ("AAGCTT", [500, 1500, 2500])
+            }
+
+            for name, (sequence, positions) in comparison_sites.items():
+                for pos in positions:
+                    comparison_dna[pos:pos+6] = list(sequence)
+
+            comparison_dna = "".join(comparison_dna)
+
+            comparison_results = []
+
+            with st.spinner("세 제한효소의 변이를 분석하는 중입니다..."):
+
+                for name, (enzyme, positions) in comparison_sites.items():
+
+                    original_pattern = get_pattern(
+                        comparison_dna, enzyme
+                    )
+
+                    detected_count = 0
+                    total_count = 0
+
+                    for i in range(len(comparison_dna)):
+                        for base in "ACGT":
+
+                            if base == comparison_dna[i]:
+                                continue
+
+                            mutant = (
+                                comparison_dna[:i]
+                                + base
+                                + comparison_dna[i+1:]
+                            )
+
+                            mutant_pattern = get_pattern(
+                                mutant, enzyme
+                            )
+
+                            total_count += 1
+
+                            if mutant_pattern != original_pattern:
+                                detected_count += 1
+
+                    rate_percent = detected_count / total_count * 100
+
+                    comparison_results.append({
+                        "제한효소": name,
+                        "구별 가능한 변이": detected_count,
+                        "전체 변이": total_count,
+                        "구별 가능 비율 (%)": round(rate_percent, 2)
+                    })
+
+            st.success("제한효소 비교 분석 완료!")
+
+            comparison_df = pd.DataFrame(comparison_results)
+
+            st.dataframe(
+                comparison_df,
+                hide_index=True,
+                use_container_width=True
+            )
+
+            st.subheader("제한효소별 비교 그래프")
+
+            st.bar_chart(
+                comparison_df,
+                x="제한효소",
+                y="구별 가능 비율 (%)",
+                horizontal=True
+            )
+
+            st.caption(
+                "각 효소의 인식 부위를 3개씩 배치한 "
+                "가상 DNA를 대상으로 한 계산 결과입니다. "
+                "실제 전기영동의 검출 한계는 반영하지 않았습니다."
+            )
