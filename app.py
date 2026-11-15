@@ -571,3 +571,125 @@ if st.session_state.get("show_analysis", False):
                 "종합한 것입니다. 실제 전기영동의 분리능이나 "
                 "동시 절단 실험을 재현한 결과는 아닙니다."
             )
+
+        st.divider()
+        st.subheader("9. DNA 변이 위치별 구별 가능성 분석")
+
+        st.write(
+            "현재 입력한 DNA의 각 위치에서 가능한 단일 염기 "
+            "치환을 분석하고, 절단 패턴이 달라지는 위치를 "
+            "그래프로 표시합니다."
+        )
+
+        if st.button("📍 변이 위치별 분석하기"):
+
+            target_dna = "".join(dna.upper().split())
+            target_enzyme = enzymes[selected]
+
+            original_pattern = get_pattern(
+                target_dna, target_enzyme
+            )
+
+            detected_positions = []
+
+            with st.spinner("DNA 위치별 변이를 분석하는 중입니다..."):
+
+                for i in range(len(target_dna)):
+
+                    detected_count = 0
+
+                    for base in "ACGT":
+
+                        if base == target_dna[i]:
+                            continue
+
+                        mutant = (
+                            target_dna[:i]
+                            + base
+                            + target_dna[i+1:]
+                        )
+
+                        mutant_pattern = get_pattern(
+                            mutant, target_enzyme
+                        )
+
+                        if mutant_pattern != original_pattern:
+                            detected_count += 1
+
+                    if detected_count > 0:
+                        detected_positions.append({
+                            "DNA 위치 (bp)": i + 1,
+                            "구별 가능한 치환 수": detected_count
+                        })
+
+            # 다른 버튼을 눌러도 결과가 유지되도록 저장
+            st.session_state["position_analysis"] = {
+                "dna": target_dna,
+                "enzyme": target_enzyme,
+                "positions": detected_positions
+            }
+
+        saved = st.session_state.get("position_analysis")
+
+        if (
+            saved is not None
+            and saved["dna"] == "".join(dna.upper().split())
+            and saved["enzyme"] == enzymes[selected]
+        ):
+
+            import pandas as pd
+
+            positions = saved["positions"]
+
+            total_detected = sum(
+                item["구별 가능한 치환 수"]
+                for item in positions
+            )
+
+            st.success("변이 위치별 분석 완료!")
+
+            col1, col2 = st.columns(2)
+
+            col1.metric(
+                "구별 가능한 변이 위치",
+                f"{len(positions)}곳"
+            )
+
+            col2.metric(
+                "구별 가능한 단일 염기 치환",
+                f"{total_detected}개"
+            )
+
+            if positions:
+
+                position_df = pd.DataFrame(positions)
+
+                st.subheader("변이 위치별 분석 그래프")
+
+                st.scatter_chart(
+                    position_df,
+                    x="DNA 위치 (bp)",
+                    y="구별 가능한 치환 수",
+                    color="#46B5C7",
+                    size=100
+                )
+
+                st.subheader("구별 가능한 변이 위치 목록")
+
+                st.dataframe(
+                    position_df,
+                    hide_index=True,
+                    use_container_width=True
+                )
+
+            else:
+                st.info(
+                    "현재 조건에서 절단 패턴이 달라지는 "
+                    "단일 염기 치환을 찾지 못했습니다."
+                )
+
+            st.caption(
+                "제한효소 절단 패턴의 차이를 기준으로 한 "
+                "이론적 분석입니다. 실제 전기영동의 "
+                "밴드 분리능은 반영하지 않았습니다."
+            )
