@@ -249,9 +249,14 @@ if st.session_state.get("show_analysis", False):
             "분석하여 절단 패턴이 변하는 경우를 계산합니다."
         )
 
+        
         if st.button("🧬 전체 변이 분석하기"):
+            st.session_state["show_mutation_analysis"] = True
+
+        if st.session_state.get("show_mutation_analysis", False):
 
             original_dna = "".join(dna.upper().split())
+
             enzyme = enzymes[selected]
 
             original_pattern = get_pattern(
