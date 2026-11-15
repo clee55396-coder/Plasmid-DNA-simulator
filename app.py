@@ -6,6 +6,11 @@ st.set_page_config(
     page_icon="🧬",
     layout="wide"
 )
+
+# 모든 분석 결과를 저장할 공통 공간
+if "analysis_results" not in st.session_state:
+    st.session_state["analysis_results"] = {}
+
 def make_gel_html(fragments):
     import math
 
