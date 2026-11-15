@@ -467,7 +467,7 @@ if st.session_state.get("show_analysis", False):
             "전체 변이 구별 가능성을 계산합니다."
         )
 
-        if st.button("🧬 세 효소 종합 분석하기"):
+        if st.toggle("🧬 세 효소 종합 분석하기", key="show_combined_analysis"):
 
             import pandas as pd
 
