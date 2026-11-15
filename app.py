@@ -693,3 +693,145 @@ if st.session_state.get("show_analysis", False):
                 "이론적 분석입니다. 실제 전기영동의 "
                 "밴드 분리능은 반영하지 않았습니다."
             )
+
+        st.divider()
+        st.subheader("10. 변이에 따른 제한효소 인식 부위 변화")
+
+        st.write(
+            "4번 항목에서 설정한 변이 위치와 변경 염기를 이용해 "
+            "염기서열 및 제한효소 인식 부위의 변화를 분석합니다."
+        )
+
+        if st.checkbox(
+            "🔎 변이 전후 염기서열 분석 결과 보기",
+            key="show_sequence_details"
+        ):
+
+            original_dna = "".join(dna.upper().split())
+            enzyme = enzymes[selected]
+
+            # 앞에서 선택한 변이 적용
+            index = mut_pos - 1
+
+            mutated_dna = (
+                original_dna[:index]
+                + new_base
+                + original_dna[index+1:]
+            )
+
+            st.write(
+                f"**변이 내용:** {mut_pos}번째 염기 "
+                f"{original_dna[index]} → {new_base}"
+            )
+
+            # 변이 전후 주변 염기서열 표시
+            start = max(0, index - 7)
+            end = min(len(original_dna), index + 8)
+
+            original_view = (
+                original_dna[start:index]
+                + "[" + original_dna[index] + "]"
+                + original_dna[index+1:end]
+            )
+
+            mutated_view = (
+                mutated_dna[start:index]
+                + "[" + mutated_dna[index] + "]"
+                + mutated_dna[index+1:end]
+            )
+
+            st.write("**원본 DNA 주변 서열**")
+            st.code(original_view)
+
+            st.write("**변이 DNA 주변 서열**")
+            st.code(mutated_view)
+
+            # 원형 DNA의 제한효소 인식 부위 찾기
+            def find_recognition_sites(sequence, motif):
+                circular = sequence + sequence[:len(motif)-1]
+
+                return {
+                    i for i in range(len(sequence))
+                    if circular[i:i+len(motif)] == motif
+                }
+
+            original_sites = find_recognition_sites(
+                original_dna, enzyme
+            )
+
+            mutated_sites = find_recognition_sites(
+                mutated_dna, enzyme
+            )
+
+            lost_sites = sorted(
+                original_sites - mutated_sites
+            )
+
+            gained_sites = sorted(
+                mutated_sites - original_sites
+            )
+
+            st.subheader("제한효소 인식 부위 분석")
+
+            st.write(
+                f"**사용한 효소:** {selected} ({enzyme})"
+            )
+
+            if lost_sites:
+
+                for pos in lost_sites:
+
+                    changed_motif = "".join(
+                        mutated_dna[(pos+j) % len(mutated_dna)]
+                        for j in range(len(enzyme))
+                    )
+
+                    st.warning(
+                        f"{pos+1}번에서 시작하는 인식 부위 소실: "
+                        f"{enzyme} → {changed_motif}"
+                    )
+
+            if gained_sites:
+
+                for pos in gained_sites:
+
+                    st.success(
+                        f"{pos+1}번에서 시작하는 "
+                        f"새로운 인식 부위 생성: {enzyme}"
+                    )
+
+            if not lost_sites and not gained_sites:
+
+                st.info(
+                    "이번 변이로 생성되거나 사라진 "
+                    "제한효소 인식 부위가 없습니다."
+                )
+
+            # 절단 패턴 변화 확인
+            original_pattern = get_pattern(
+                original_dna, enzyme
+            )
+
+            mutated_pattern = get_pattern(
+                mutated_dna, enzyme
+            )
+
+            st.write("**원본 절단 패턴:**", original_pattern)
+            st.write("**변이 절단 패턴:**", mutated_pattern)
+
+            if original_pattern != mutated_pattern:
+
+                st.success(
+                    "인식 부위 변화에 따라 절단 패턴이 달라졌습니다."
+                )
+
+            else:
+
+                st.info(
+                    "이번 변이에서는 절단 조각 크기 패턴이 동일합니다."
+                )
+
+            st.caption(
+                "원형 DNA 서열과 제한효소의 완전 절단을 "
+                "가정한 이론적 분석 결과입니다."
+            )
