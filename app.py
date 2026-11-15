@@ -186,7 +186,18 @@ if st.session_state.get("show_analysis", False):
             available_bases
         )
 
+        
         if st.button("🧪 원본 vs 변이 비교하기"):
+            st.session_state["show_comparison"] = True
+
+        if st.session_state.get("show_comparison", False):
+
+            mutant_dna = (
+                current_dna[:mut_pos - 1]
+                + new_base
+                + current_dna[mut_pos:]
+            )
+
 
             mutant_dna = (
                 current_dna[:mut_pos - 1]
