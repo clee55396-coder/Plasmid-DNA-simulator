@@ -371,7 +371,9 @@ if st.session_state.get("show_analysis", False):
             "단일 염기 치환에 대한 구별 가능성을 비교합니다."
         )
 
-        if st.button("🔬 제한효소 3종 비교하기"):
+        
+        if st.toggle("🔬 제한효소 3종 비교하기", key="show_enzyme_comparison"):
+
 
             import pandas as pd
 
