@@ -693,7 +693,14 @@ if st.session_state.get("show_analysis", False):
                     hide_index=True,
                     use_container_width=True
                 )
-
+                st.download_button(
+                    label="위치별 분석 결과 CSV 다운로드",
+                    data=position_df.to_csv(index=False).encode("utf-8-sig"),
+                    file_name=f"mutation_positions_{selected}.csv",
+                    mime="text/csv",
+                    key="download_mutation_positions",
+                    on_click="ignore"
+                )
             else:
                 st.info(
                     "현재 조건에서 절단 패턴이 달라지는 "
