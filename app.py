@@ -223,10 +223,21 @@ if st.session_state.get("show_analysis", False):
                 f"{original_base} → {new_base}"
             )
 
-            if original_fragments == mutant_fragments:
-                st.info("절단 패턴이 동일하여 이 효소로 구별할 수 없습니다.")
+            if not original_fragments or not mutant_fragments:
+                st.info(
+                    "이 모형에서 미절단 원형 DNA의 밴드 위치는 계산하지 않아 "
+                    "밴드 패턴을 비교할 수 없습니다."
+                )
+            elif set(original_fragments) == set(mutant_fragments):
+                st.info(
+                    "모형에서 밴드 위치가 같아 위치만으로는 "
+                    "두 시료를 구별할 수 없습니다."
+                )
             else:
-                st.success("절단 패턴이 달라져 이 효소로 구별할 수 있습니다.")
+                st.success(
+                    "절단 조각의 크기가 달라 모형에서 "
+                    "밴드 위치 차이가 예상됩니다."
+                )
             for label, fragments in (
                 ("원본 DNA", original_fragments),
                 ("변이 DNA", mutant_fragments),
