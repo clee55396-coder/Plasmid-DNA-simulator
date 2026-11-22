@@ -227,7 +227,19 @@ if st.session_state.get("show_analysis", False):
                 st.info("절단 패턴이 동일하여 이 효소로 구별할 수 없습니다.")
             else:
                 st.success("절단 패턴이 달라져 이 효소로 구별할 수 있습니다.")
+            for label, fragments in (
+                ("원본 DNA", original_fragments),
+                ("변이 DNA", mutant_fragments),
+            ):
+                if fragments:
+                    st.write(
+                        f"**{label}** · 절단 조각 {len(fragments)}개 · "
+                        f"서로 다른 크기의 밴드 {len(set(fragments))}개"
+                    )
+                else:
+                    st.write(f"**{label}** · 미절단 원형 DNA")
 
+            st.caption("이 모형에서는 같은 크기의 조각을 한 위치에 표시합니다.")
             col1, col2 = st.columns(2)
 
             with col1:
@@ -556,7 +568,20 @@ if st.session_state.get("show_analysis", False):
                 hide_index=True,
                 use_container_width=True
             )
+            summary_csv = result_df.copy()
+            summary_csv["전체 단일 염기 치환 수"] = total
+            summary_csv["이론적 구별 가능 비율 (%)"] = (
+                summary_csv["구별 가능 변이 수"] / total * 100
+            ).round(2)
 
+            st.download_button(
+                label="제한효소 종합 분석 CSV 다운로드",
+                data=summary_csv.to_csv(index=False).encode("utf-8-sig"),
+                file_name="enzyme_comparison_summary.csv",
+                mime="text/csv",
+                key="download_enzyme_summary",
+                on_click="ignore"
+            )
             st.subheader("종합 분석 결과")
 
             col1, col2 = st.columns(2)
